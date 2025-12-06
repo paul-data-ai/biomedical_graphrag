@@ -189,6 +189,18 @@ prefect-test-rate-limit: ## Test rate limiting with small dataset
 	uv run python scripts/run_flow.py
 
 ################################################################################
+## API Server
+################################################################################
+
+api-start: ## Start the FastAPI server
+	@echo "Starting FastAPI server on http://localhost:8000..."
+	uv run uvicorn biomedical_graphrag.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+api-start-prod: ## Start the FastAPI server in production mode
+	@echo "Starting FastAPI server in production mode..."
+	uv run uvicorn biomedical_graphrag.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+################################################################################
 ## Help
 ################################################################################
 
