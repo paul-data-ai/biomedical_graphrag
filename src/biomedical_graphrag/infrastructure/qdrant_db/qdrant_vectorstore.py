@@ -178,7 +178,7 @@ class AsyncQdrantVectorStore:
                     await self.client.upsert(
                         collection_name=self.collection_name,
                         points=Batch(
-                            ids=[str(i) for i in batch_ids],
+                            ids=batch_ids,
                             payloads=batch_payloads,
                             vectors={"Dense": [list(v) for v in batch_vectors]},
                         ),

@@ -23,6 +23,7 @@
 - [Biomedical GraphRAG](#biomedical-graphrag)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+  - [Attribution](#attribution)
   - [Project Structure](#project-structure)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -54,6 +55,24 @@ Article: [Building a Biomedical GraphRAG: When Knowledge Graphs Meet Vector Sear
 - **Intelligent Querying**: Uses LLM-powered tool selection for graph enrichment and semantic search
 - **Biomedical Schema**: Specialized graph schema for papers, authors, institutions, genes, and MeSH terms
 - **Async Processing**: High-performance async data collection and processing
+- **Production Orchestration**: Prefect-based workflow orchestration with adaptive rate limiting and automated updates
+
+## Attribution
+
+This project is based on [biomedical-graphrag](https://github.com/benitomartin/biomedical-graphrag) by [Benito Martin](https://github.com/benitomartin).
+
+See his excellent article: [Building a Biomedical GraphRAG: When Knowledge Graphs Meet Vector Search](https://aiechoes.substack.com/p/building-a-biomedical-graphrag-when)
+
+### Enhancements
+
+This fork includes production-ready enhancements:
+
+- **Prefect Orchestration**: Adaptive rate limiting with circuit breaker pattern, weekly incremental updates, and monthly full rebuilds
+- **Production Infrastructure**: Docker Compose setup, work pools, and deployment configurations
+- **Enhanced Documentation**: Comprehensive orchestration guides and project structure documentation
+- **Improved Organization**: Restructured directories for better maintainability
+
+For detailed credits, see [CREDITS.md](CREDITS.md).
 
 ## Project Structure
 
@@ -97,8 +116,8 @@ biomedical-graphrag-pipeline/
 1. Clone the repository:
 
    ```bash
-   git clone git@github.com:benitomartin/biomedical-graphrag.git
-   cd biomedical-graphrag
+   git clone https://github.com/paul-data-ai/biomedical_graphrag.git
+   cd biomedical_graphrag
    ```
 
 1. Create a virtual environment:

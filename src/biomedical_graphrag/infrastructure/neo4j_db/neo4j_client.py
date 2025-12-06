@@ -57,3 +57,19 @@ class AsyncNeo4jClient:
         Delete all nodes and relationships in the graph.
         """
         await self.execute("MATCH (n) DETACH DELETE n")
+
+    async def query(self, cypher_query: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        """
+        Execute a Cypher query and return results.
+
+        Args:
+            cypher_query: The Cypher query to execute
+            parameters: Optional parameters for the query
+
+        Returns:
+            List of result records as dictionaries
+        """
+        async with self.driver.session(database=self.database) as session:
+            result = await session.run(cypher_query, parameters or {})
+            records = await result.data()
+            return records

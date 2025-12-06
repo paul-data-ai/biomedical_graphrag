@@ -152,6 +152,43 @@ all-check: ruff-format ruff-check clean ## Run all: linting, formatting and type
 all-fix: ruff-format-fix ruff-check-fix mypy clean ## Run all fix: auto-formatting and linting fixes
 
 ################################################################################
+## Prefect Orchestration
+################################################################################
+
+prefect-server-start: ## Start Prefect server with Docker Compose
+	@echo "Starting Prefect server..."
+	docker-compose -f deployment/docker-compose.prefect.yml up -d
+	@echo "Prefect UI available at http://localhost:4200"
+
+prefect-server-stop: ## Stop Prefect server
+	@echo "Stopping Prefect server..."
+	docker-compose -f deployment/docker-compose.prefect.yml down
+
+prefect-server-logs: ## View Prefect server logs
+	docker-compose -f deployment/docker-compose.prefect.yml logs -f
+
+prefect-deploy: ## Deploy Prefect flows
+	@echo "Deploying Prefect flows..."
+	uv run python scripts/deploy_flows.py
+	@echo "Deployment complete."
+
+prefect-worker-start: ## Start Prefect worker locally (without Docker)
+	@echo "Starting Prefect worker..."
+	uv run prefect worker start --pool biomedical-pool
+
+prefect-run-incremental: ## Manually trigger incremental update
+	@echo "Triggering incremental update..."
+	uv run prefect deployment run biomedical-graphrag-incremental-update/adhoc-incremental-update
+
+prefect-run-rebuild: ## Manually trigger full rebuild
+	@echo "Triggering full rebuild..."
+	uv run prefect deployment run biomedical-graphrag-full-rebuild/adhoc-full-rebuild
+
+prefect-test-rate-limit: ## Test rate limiting with small dataset
+	@echo "Testing rate limiting..."
+	uv run python scripts/run_flow.py
+
+################################################################################
 ## Help
 ################################################################################
 

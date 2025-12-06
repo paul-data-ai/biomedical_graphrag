@@ -1,0 +1,67 @@
+# Prefect deployment configuration
+name: biomedical-graphrag
+
+# Work pool configuration
+work_pools:
+  biomedical-pool:
+    type: process
+    description: "Process-based work pool for biomedical GraphRAG tasks"
+    max_workers: 2
+    concurrency_limit: 1  # Prevent concurrent runs to avoid rate limit issues
+
+# Default deployment parameters
+deployments:
+  - name: weekly-incremental
+    entrypoint: src/biomedical_graphrag/orchestration/flows.py:incremental_update
+    work_pool:
+      name: biomedical-pool
+    schedule:
+      cron: "0 2 * * 0"  # Every Sunday at 2 AM
+      timezone: UTC
+    parameters:
+      search_terms:
+        - "CRISPR gene editing"
+        - "cancer immunotherapy"
+        - "genome sequencing"
+      max_results_per_term: 50
+      batch_size: 50
+
+  - name: monthly-rebuild
+    entrypoint: src/biomedical_graphrag/orchestration/flows.py:full_rebuild
+    work_pool:
+      name: biomedical-pool
+    schedule:
+      cron: "0 3 1 * *"  # 1st of month at 3 AM
+      timezone: UTC
+    parameters:
+      search_terms:
+        - "CRISPR gene editing"
+        - "cancer immunotherapy"
+        - "genome sequencing"
+        - "CAR-T cell therapy"
+        - "mRNA vaccine"
+      max_results_per_term: 200
+      batch_size: 50
+
+  - name: daily-validation
+    entrypoint: src/biomedical_graphrag/orchestration/flows.py:consistency_check
+    work_pool:
+      name: biomedical-pool
+    schedule:
+      cron: "0 1 * * *"  # Every day at 1 AM
+      timezone: UTC
+
+# Prefect server/cloud configuration
+prefect:
+  # Use local server (comment out to use Prefect Cloud)
+  api_url: http://localhost:4200/api
+
+  # Or use Prefect Cloud (uncomment and add your workspace)
+  # api_url: https://api.prefect.cloud/api/accounts/[ACCOUNT_ID]/workspaces/[WORKSPACE_ID]
+  # api_key: ${PREFECT_API_KEY}  # Set in environment
+
+# Storage configuration (optional - for code storage)
+# storage:
+#   type: github
+#   repository: your-org/biomedical-graphrag
+#   branch: main
