@@ -15,6 +15,7 @@
 [![Qdrant](https://img.shields.io/badge/Qdrant-1.15.1-5A31F4?logo=qdrant&logoColor=white)](https://qdrant.tech/)
 [![Neo4j](https://img.shields.io/badge/Neo4j-5.28.2-008CC1?logo=neo4j&logoColor=white)](https://neo4j.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-2.3.0-412991?logo=openai&logoColor=white)](https://openai.com/)
+[![Prefect](https://img.shields.io/badge/Prefect-3.2.0-024DFD?logo=prefect&logoColor=white)](https://prefect.io/)
 
 </div>
 
@@ -33,6 +34,11 @@
     - [Infrastructure Setup](#infrastructure-setup)
       - [Neo4j Graph Database](#neo4j-graph-database)
       - [Qdrant Vector Database](#qdrant-vector-database)
+    - [Orchestration](#orchestration)
+      - [Prefect Setup](#prefect-setup)
+      - [Deployment Commands](#deployment-commands)
+      - [Available Flows](#available-flows)
+      - [Rate Limiting](#rate-limiting)
     - [Query Commands](#query-commands)
       - [Qdrant Vector Search](#qdrant-vector-search)
       - [Hybrid Neo4j + Qdrant Queries](#hybrid-neo4j--qdrant-queries)
@@ -77,10 +83,20 @@ For detailed credits, see [CREDITS.md](CREDITS.md).
 ## Project Structure
 
 ```text
-biomedical-graphrag-pipeline/
+biomedical-graphrag/
 ├── .github/                    # GitHub workflows and templates
 ├── data/                       # Dataset storage (PubMed, Gene data)
+├── deployment/                 # Deployment configurations
+│   ├── docker-compose.prefect.yml  # Prefect infrastructure
+│   ├── Dockerfile.prefect          # Worker container
+│   └── README.md
 ├── docs/                       # Documentation
+│   ├── ORCHESTRATION.md            # Full orchestration guide
+│   └── QUICKSTART_ORCHESTRATION.md # Quick start guide
+├── scripts/                    # Utility scripts
+│   ├── deploy_flows.py            # Deploy Prefect flows
+│   ├── run_flow.py                # Test flow execution
+│   └── README.md
 ├── src/
 │   └── biomedical_graphrag/
 │       ├── application/        # Application layer
@@ -90,11 +106,18 @@ biomedical-graphrag-pipeline/
 │       ├── data_sources/       # Data collection modules
 │       ├── domain/             # Domain models and entities
 │       ├── infrastructure/     # Database and external service adapters
+│       ├── orchestration/      # Prefect workflows
+│       │   ├── flows.py        # Main orchestration flows
+│       │   ├── tasks.py        # Prefect tasks
+│       │   └── rate_limiter.py # Rate limiting logic
 │       └── utils/              # Utility functions
 ├── static/                     # Static assets (images, etc.)
 ├── tests/                      # Test suite
+├── CREDITS.md                  # Attribution and credits
 ├── LICENSE                     # MIT License
 ├── Makefile                    # Build and development commands
+├── prefect.yaml                # Prefect configuration
+├── PROJECT_STRUCTURE.md        # Detailed structure guide
 ├── pyproject.toml              # Project configuration and dependencies
 ├── README.md                   # This file
 └── uv.lock                     # Dependency lock file
@@ -102,14 +125,16 @@ biomedical-graphrag-pipeline/
 
 ## Prerequisites
 
-| Requirement                                            | Description                             |
-| ------------------------------------------------------ | --------------------------------------- |
-| [Python 3.13+](https://www.python.org/downloads/)      | Programming language                    |
-| [uv](https://docs.astral.sh/uv/)                       | Package and dependency manager          |
-| [Neo4j](https://neo4j.com/)                            | Graph database for knowledge graphs     |
-| [Qdrant](https://qdrant.tech/)                         | Vector database for embeddings          |
-| [OpenAI](https://openai.com/)                          | LLM provider for queries and embeddings |
-| [PubMed](https://www.ncbi.nlm.nih.gov/books/NBK25501/) | Biomedical literature database          |
+| Requirement                                            | Description                                      |
+| ------------------------------------------------------ | ------------------------------------------------ |
+| [Python 3.13+](https://www.python.org/downloads/)      | Programming language                             |
+| [uv](https://docs.astral.sh/uv/)                       | Package and dependency manager                   |
+| [Neo4j](https://neo4j.com/)                            | Graph database for knowledge graphs              |
+| [Qdrant](https://qdrant.tech/)                         | Vector database for embeddings                   |
+| [OpenAI](https://openai.com/)                          | LLM provider for queries and embeddings          |
+| [Prefect](https://prefect.io/)                         | Workflow orchestration (optional, for automation)|
+| [Docker](https://www.docker.com/)                      | Container platform (optional, for Prefect)       |
+| [PubMed](https://www.ncbi.nlm.nih.gov/books/NBK25501/) | Biomedical literature database                   |
 
 ## Installation
 
@@ -217,6 +242,97 @@ make ingest-qdrant-data
 # Delete vector collection
 make delete-qdrant-collection
 ```
+
+### Orchestration
+
+Production-ready workflow orchestration with Prefect for automated data updates, rate limiting, and error handling.
+
+#### Prefect Setup
+
+Start the Prefect server with Docker Compose:
+
+```bash
+# Start Prefect server (UI at http://localhost:4200)
+make prefect-server-start
+
+# View logs
+make prefect-server-logs
+
+# Stop server
+make prefect-server-stop
+```
+
+Create work pool and deploy flows:
+
+```bash
+# Create work pool (one-time setup)
+prefect work-pool create biomedical-pool --type process
+
+# Deploy flows to Prefect server
+make prefect-deploy
+
+# Start worker to execute flows
+make prefect-worker-start
+```
+
+Access the Prefect UI at `http://localhost:4200` to monitor and trigger flows.
+
+#### Deployment Commands
+
+```bash
+# Manually trigger incremental update (weekly)
+make prefect-run-incremental
+
+# Manually trigger full rebuild (monthly)
+make prefect-run-rebuild
+
+# Test rate limiting with small dataset
+make prefect-test-rate-limit
+```
+
+#### Available Flows
+
+**Incremental Update Flow** (Weekly)
+- Collects new PubMed papers and gene data
+- Updates existing graph and vector store
+- Uses MERGE operations to avoid duplicates
+- Scheduled to run weekly (configurable)
+
+**Full Rebuild Flow** (Monthly)
+- Validates configuration
+- Collects complete dataset
+- Rebuilds graph and vector store from scratch
+- Runs validation checks
+- Scheduled to run monthly (configurable)
+
+**Test Flow**
+- Quick validation with small dataset
+- Tests rate limiting behavior
+- Useful for development and debugging
+
+#### Rate Limiting
+
+The orchestration system includes adaptive rate limiting with circuit breaker pattern:
+
+**Features:**
+- Token bucket algorithm for burst support
+- Sliding window for per-minute limits
+- Circuit breaker states: CLOSED → OPEN → HALF_OPEN
+- Exponential backoff with jitter for retries
+- Automatic recovery from API failures
+
+**Configuration:**
+- PubMed API: 3 requests/second (default)
+- Customizable via `RateLimitConfig` in `rate_limiter.py`
+
+**Circuit Breaker:**
+- Opens after 5 consecutive failures
+- Half-open after 60-second cooldown
+- Automatically closes on successful requests
+
+For detailed orchestration documentation, see:
+- [docs/ORCHESTRATION.md](docs/ORCHESTRATION.md) - Comprehensive guide
+- [docs/QUICKSTART_ORCHESTRATION.md](docs/QUICKSTART_ORCHESTRATION.md) - Quick start
 
 ### Query Commands
 
