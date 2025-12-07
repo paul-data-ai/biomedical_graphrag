@@ -7,7 +7,7 @@ authors = [
     {name = "Benito Martin"}
 ]
 license = {text = ""}
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 
 dependencies = [
     "biopython>=1.85",
@@ -86,8 +86,8 @@ targets = ["src"]
 ######################################
 
 [tool.ruff]
-# Assume Python 3.13
-target-version = "py313"
+# Assume Python 3.12 (compatible with Prefect Cloud)
+target-version = "py312"
 
 # Same as Black.
 line-length = 105     # Line length of 105 chars (like Black default is 88)
