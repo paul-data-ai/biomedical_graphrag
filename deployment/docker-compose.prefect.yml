@@ -1,51 +1,17 @@
 version: '3.8'
 
 services:
-  # Prefect Server (self-hosted)
-  prefect-server:
-    image: prefecthq/prefect:2-python3.13
-    container_name: biomedical-prefect-server
-    ports:
-      - "4200:4200"
-    environment:
-      - PREFECT_UI_API_URL=http://localhost:4200/api
-      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect:prefect@postgres:5432/prefect
-      - PREFECT_SERVER_API_HOST=0.0.0.0
-    command: prefect server start --host 0.0.0.0
-    depends_on:
-      - postgres
-    networks:
-      - biomedical-net
-    restart: unless-stopped
-
-  # PostgreSQL for Prefect metadata
-  postgres:
-    image: postgres:16-alpine
-    container_name: biomedical-prefect-db
-    environment:
-      - POSTGRES_USER=prefect
-      - POSTGRES_PASSWORD=prefect
-      - POSTGRES_DB=prefect
-    volumes:
-      - prefect-db-data:/var/lib/postgresql/data
-    networks:
-      - biomedical-net
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U prefect"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Prefect Worker
+  # Prefect Worker (connected to Prefect Cloud)
   prefect-worker:
     build:
-      context: .
-      dockerfile: Dockerfile.prefect
+      context: ..
+      dockerfile: deployment/Dockerfile.prefect
     container_name: biomedical-prefect-worker
     environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
-      # Load from .env file
+      # Prefect Cloud Configuration
+      - PREFECT_API_URL=${PREFECT__API_URL}
+      - PREFECT_API_KEY=${PREFECT__API_KEY}
+      # Application environment variables
       - OPENAI__API_KEY=${OPENAI__API_KEY}
       - NEO4J__URI=${NEO4J__URI}
       - NEO4J__USERNAME=${NEO4J__USERNAME}
@@ -55,18 +21,12 @@ services:
       - PUBMED__EMAIL=${PUBMED__EMAIL}
       - PUBMED__API_KEY=${PUBMED__API_KEY}
     volumes:
-      - ./data:/app/data  # Mount data directory
-      - ./.env:/app/.env:ro  # Mount .env file (read-only)
-    command: prefect worker start --pool biomedical-pool --type process
-    depends_on:
-      - prefect-server
+      - ../data:/app/data  # Mount data directory
+      - ../.env:/app/.env:ro  # Mount .env file (read-only)
+    command: uv run prefect worker start --pool biomedical-pool --type process
     networks:
       - biomedical-net
     restart: unless-stopped
-
-volumes:
-  prefect-db-data:
-    driver: local
 
 networks:
   biomedical-net:

@@ -168,8 +168,8 @@ prefect-server-logs: ## View Prefect server logs
 	docker-compose -f deployment/docker-compose.prefect.yml logs -f
 
 prefect-deploy: ## Deploy Prefect flows
-	@echo "Deploying Prefect flows..."
-	uv run prefect deploy --all
+	@echo "Deploying Prefect flows from worker container..."
+	docker exec biomedical-prefect-worker uv run prefect deploy --all
 	@echo "Deployment complete."
 
 prefect-worker-start: ## Start Prefect worker locally (without Docker)

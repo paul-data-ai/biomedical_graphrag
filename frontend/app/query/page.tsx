@@ -264,10 +264,9 @@ function AssistantMessage({ content }: { content: any }) {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
       {/* Answer with Markdown */}
-      <div className="prose prose-blue max-w-none">
+      <div className="prose prose-blue max-w-none text-gray-800">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          className="text-gray-800"
           components={{
             // Custom styling for markdown elements
             h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-4 mb-2" {...props} />,

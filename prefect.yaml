@@ -53,15 +53,16 @@ deployments:
 
 # Prefect server/cloud configuration
 prefect:
-  # Use local server (comment out to use Prefect Cloud)
-  api_url: http://localhost:4200/api
+  # Use Prefect Cloud
+  api_url: ${PREFECT__API_URL}
+  api_key: ${PREFECT__API_KEY}
 
-  # Or use Prefect Cloud (uncomment and add your workspace)
-  # api_url: https://api.prefect.cloud/api/accounts/[ACCOUNT_ID]/workspaces/[WORKSPACE_ID]
-  # api_key: ${PREFECT_API_KEY}  # Set in environment
+  # Or use local server (uncomment for self-hosted)
+  # api_url: http://localhost:4200/api
 
-# Storage configuration (optional - for code storage)
-# storage:
-#   type: github
-#   repository: your-org/biomedical-graphrag
-#   branch: main
+# Pull configuration - Prefect Cloud will pull code from GitHub
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/paul-data-ai/biomedical_graphrag.git
+      branch: main
+      access_token: null  # Public repo - no token needed. For private: use ${GITHUB_TOKEN}
