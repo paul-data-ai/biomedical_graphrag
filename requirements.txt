@@ -1,0 +1,24 @@
+# Core dependencies for biomedical-graphrag
+prefect>=3.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+loguru>=0.7.0
+
+# Data sources
+biopython>=1.80
+openai>=1.0.0
+
+# Graph database
+neo4j>=5.0.0
+neo4j-graphrag>=1.0.0
+
+# Vector database
+qdrant-client>=1.0.0
+
+# API server
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# Install the biomedical-graphrag package from the current directory
+# This is needed when Prefect Cloud clones the repo
+.
