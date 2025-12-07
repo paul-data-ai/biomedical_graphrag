@@ -1,7 +1,9 @@
 """Query routes for natural language GraphRAG queries."""
 
+import json
 import time
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from biomedical_graphrag.api.models import QueryRequest, QueryResponse, PaperResult
@@ -95,6 +97,75 @@ async def query_graphrag(request: QueryRequest) -> QueryResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Query execution failed: {str(e)}"
         ) from e
+
+
+@router.post("/stream")
+async def query_graphrag_stream(request: QueryRequest):
+    """
+    Stream a natural language query response using GraphRAG.
+
+    Returns results as Server-Sent Events for real-time streaming.
+    """
+    async def generate():
+        """Generate streaming response."""
+        start_time = time.time()
+
+        try:
+            # Send initial status
+            yield f"data: {json.dumps({'type': 'status', 'content': 'Processing query...'})}\n\n"
+
+            # Get fusion service
+            fusion_service = await get_fusion_service()
+
+            # Execute query
+            yield f"data: {json.dumps({'type': 'status', 'content': 'Searching databases...'})}\n\n"
+
+            result = await fusion_service.query(question=request.question, top_k=request.limit)
+
+            # Stream the answer
+            answer = result.get("answer", "No answer generated")
+            yield f"data: {json.dumps({'type': 'status', 'content': 'Generating answer...'})}\n\n"
+
+            # Stream answer in chunks (simulate streaming - in real implementation, this would come from LLM streaming)
+            chunk_size = 50
+            for i in range(0, len(answer), chunk_size):
+                chunk = answer[i:i + chunk_size]
+                yield f"data: {json.dumps({'type': 'answer_chunk', 'content': chunk})}\n\n"
+
+            # Send papers data
+            papers = []
+            if result.get("papers"):
+                for paper in result["papers"][:request.limit]:
+                    papers.append({
+                        "pmid": paper.get("pmid", ""),
+                        "title": paper.get("title", ""),
+                        "abstract": paper.get("abstract"),
+                        "publication_date": paper.get("publication_date"),
+                        "authors": paper.get("authors", []),
+                        "genes": paper.get("genes", []),
+                        "mesh_terms": paper.get("mesh_terms", []),
+                        "score": paper.get("score")
+                    })
+
+            execution_time_ms = (time.time() - start_time) * 1000
+
+            # Send final data
+            yield f"data: {json.dumps({'type': 'papers', 'content': papers})}\n\n"
+            yield f"data: {json.dumps({'type': 'metadata', 'content': {'execution_time_ms': execution_time_ms, 'query_type': request.mode}})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+        except Exception as e:
+            logger.error(f"Streaming query failed: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        }
+    )
 
 
 @router.get("/examples", response_model=list[str])

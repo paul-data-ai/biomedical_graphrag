@@ -7,7 +7,7 @@ from loguru import logger
 
 from biomedical_graphrag.api.models import SystemHealth
 from biomedical_graphrag.infrastructure.neo4j_db.neo4j_client import AsyncNeo4jClient
-from biomedical_graphrag.infrastructure.qdrant_db.qdrant_vectorstore import QdrantVectorStore
+from biomedical_graphrag.infrastructure.qdrant_db.qdrant_vectorstore import AsyncQdrantVectorStore
 from biomedical_graphrag.config import Settings
 
 router = APIRouter(prefix="/api/health", tags=["health"])

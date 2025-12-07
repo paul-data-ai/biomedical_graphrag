@@ -5,21 +5,21 @@ from fastapi import APIRouter, HTTPException, status
 from loguru import logger
 
 from biomedical_graphrag.api.models import SearchRequest, SearchResponse, PaperResult
-from biomedical_graphrag.infrastructure.qdrant_db.qdrant_vectorstore import QdrantVectorStore
+from biomedical_graphrag.infrastructure.qdrant_db.qdrant_vectorstore import AsyncQdrantVectorStore
 from biomedical_graphrag.config import Settings
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 # Global vectorstore instance
-_vectorstore: QdrantVectorStore | None = None
+_vectorstore: AsyncQdrantVectorStore | None = None
 
 
-async def get_vectorstore() -> QdrantVectorStore:
+async def get_vectorstore() -> AsyncQdrantVectorStore:
     """Get or create the vectorstore instance."""
     global _vectorstore
     if _vectorstore is None:
         settings = Settings()
-        _vectorstore = QdrantVectorStore(settings=settings)
+        _vectorstore = AsyncQdrantVectorStore(settings=settings)
     return _vectorstore
 
 

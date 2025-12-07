@@ -5,8 +5,13 @@ from .responses import (
     QueryResponse,
     SearchResponse,
     GraphData,
+    GraphNode,
+    GraphEdge,
     SystemHealth,
     StatsResponse,
+    PaperResult,
+    AuthorResult,
+    GeneResult,
 )
 
 __all__ = [
@@ -16,6 +21,11 @@ __all__ = [
     "QueryResponse",
     "SearchResponse",
     "GraphData",
+    "GraphNode",
+    "GraphEdge",
     "SystemHealth",
     "StatsResponse",
+    "PaperResult",
+    "AuthorResult",
+    "GeneResult",
 ]

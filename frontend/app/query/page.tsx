@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, Loader2, Home, FileText, Dna } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import api, { QueryResponse, PaperResult } from '@/lib/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { PaperResult } from '@/lib/api';
 
 export default function QueryPage() {
   const searchParams = useSearchParams();
@@ -35,27 +37,116 @@ export default function QueryPage() {
     setQuestion('');
     setLoading(true);
 
+    // Create placeholder for streaming response
+    const messageIndex = messages.length + 1;
+    setMessages(prev => [
+      ...prev,
+      {
+        role: 'assistant',
+        content: {
+          answer: '',
+          papers: [],
+          execution_time_ms: 0,
+          status: 'streaming',
+        },
+      },
+    ]);
+
     try {
-      const response = await api.query({
-        question: currentQuestion,
-        mode: 'hybrid',
-        limit: 10,
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/query/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: currentQuestion,
+          mode: 'hybrid',
+          limit: 10,
+        }),
       });
 
-      // Add assistant response
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      if (!response.body) throw new Error('No response body');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let answer = '';
+      let papers: PaperResult[] = [];
+      let metadata = {};
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+
+              if (data.type === 'answer_chunk') {
+                answer += data.content;
+                // Update message with streaming content
+                setMessages(prev =>
+                  prev.map((msg, idx) =>
+                    idx === messageIndex
+                      ? {
+                          ...msg,
+                          content: {
+                            ...msg.content,
+                            answer,
+                          },
+                        }
+                      : msg
+                  )
+                );
+              } else if (data.type === 'papers') {
+                papers = data.content;
+              } else if (data.type === 'metadata') {
+                metadata = data.content;
+              } else if (data.type === 'done') {
+                // Finalize message
+                setMessages(prev =>
+                  prev.map((msg, idx) =>
+                    idx === messageIndex
+                      ? {
+                          ...msg,
+                          content: {
+                            answer,
+                            papers,
+                            ...metadata,
+                            status: 'complete',
+                          },
+                        }
+                      : msg
+                  )
+                );
+              }
+            } catch (err) {
+              console.error('Error parsing SSE data:', err);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Query failed:', error);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: {
-            answer: 'Sorry, I encountered an error processing your question. Please try again.',
-            papers: [],
-          },
-        },
-      ]);
+      setMessages(prev =>
+        prev.map((msg, idx) =>
+          idx === messageIndex
+            ? {
+                ...msg,
+                content: {
+                  answer: 'Sorry, I encountered an error processing your question. Please try again.',
+                  papers: [],
+                  execution_time_ms: 0,
+                  status: 'error',
+                },
+              }
+            : msg
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -169,12 +260,38 @@ function UserMessage({ content }: { content: string }) {
   );
 }
 
-function AssistantMessage({ content }: { content: QueryResponse }) {
+function AssistantMessage({ content }: { content: any }) {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
-      {/* Answer */}
+      {/* Answer with Markdown */}
       <div className="prose prose-blue max-w-none">
-        <p className="text-gray-800">{content.answer}</p>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          className="text-gray-800"
+          components={{
+            // Custom styling for markdown elements
+            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-4 mb-2" {...props} />,
+            h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-3 mb-2" {...props} />,
+            h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-2 mb-1" {...props} />,
+            p: ({ node, ...props }) => <p className="mb-2 leading-relaxed" {...props} />,
+            ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+            ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+            li: ({ node, ...props }) => <li className="ml-4" {...props} />,
+            code: ({ node, inline, ...props }: any) =>
+              inline ? (
+                <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" {...props} />
+              ) : (
+                <code className="block bg-gray-100 p-2 rounded my-2 text-sm font-mono overflow-x-auto" {...props} />
+              ),
+            strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
+            em: ({ node, ...props }) => <em className="italic text-gray-700" {...props} />,
+            a: ({ node, ...props }) => (
+              <a className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer" {...props} />
+            ),
+          }}
+        >
+          {content.answer || ''}
+        </ReactMarkdown>
       </div>
 
       {/* Papers */}
@@ -185,7 +302,7 @@ function AssistantMessage({ content }: { content: QueryResponse }) {
             Related Papers ({content.papers.length})
           </h3>
           <div className="space-y-3">
-            {content.papers.slice(0, 5).map((paper, idx) => (
+            {content.papers.slice(0, 5).map((paper: PaperResult, idx: number) => (
               <PaperCard key={idx} paper={paper} />
             ))}
           </div>
@@ -193,9 +310,11 @@ function AssistantMessage({ content }: { content: QueryResponse }) {
       )}
 
       {/* Execution Time */}
-      <div className="text-sm text-gray-500 pt-2 border-t">
-        Query completed in {content.execution_time_ms.toFixed(0)}ms
-      </div>
+      {content.execution_time_ms > 0 && (
+        <div className="text-sm text-gray-500 pt-2 border-t">
+          Query completed in {content.execution_time_ms.toFixed(0)}ms
+        </div>
+      )}
     </div>
   );
 }
