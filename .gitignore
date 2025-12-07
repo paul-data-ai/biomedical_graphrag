@@ -16,6 +16,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Exception for frontend lib directory (contains source code, not packages)
+!frontend/lib/
 parts/
 sdist/
 var/
