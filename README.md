@@ -16,6 +16,8 @@
 [![Neo4j](https://img.shields.io/badge/Neo4j-5.28.2-008CC1?logo=neo4j&logoColor=white)](https://neo4j.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-2.3.0-412991?logo=openai&logoColor=white)](https://openai.com/)
 [![Prefect](https://img.shields.io/badge/Prefect-3.2.0-024DFD?logo=prefect&logoColor=white)](https://prefect.io/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
 </div>
 
@@ -39,6 +41,9 @@
       - [Deployment Commands](#deployment-commands)
       - [Available Flows](#available-flows)
       - [Rate Limiting](#rate-limiting)
+    - [Web Interface](#web-interface)
+      - [FastAPI Backend](#fastapi-backend)
+      - [Next.js Frontend](#nextjs-frontend)
     - [Query Commands](#query-commands)
       - [Qdrant Vector Search](#qdrant-vector-search)
       - [Hybrid Neo4j + Qdrant Queries](#hybrid-neo4j--qdrant-queries)
@@ -55,6 +60,7 @@ A comprehensive GraphRAG (Graph Retrieval-Augmented Generation) system designed 
 **Key Features:**
 
 - **Hybrid Query System**: Combines Neo4j graph database with Qdrant vector search for comprehensive biomedical insights
+- **Modern Web Interface**: ChatGPT-style interface built with Next.js and FastAPI for intuitive research exploration
 - **Data Integration**: Processes PubMed papers, gene data, and research citations
 - **Intelligent Querying**: Uses LLM-powered tool selection for graph enrichment and semantic search
 - **Biomedical Schema**: Specialized graph schema for papers, authors, institutions, genes, and MeSH terms
@@ -71,6 +77,7 @@ See his excellent article: [Building a Biomedical GraphRAG: When Knowledge Graph
 
 This fork includes production-ready enhancements:
 
+- **Web Interface**: Modern ChatGPT-style UI with Next.js frontend and FastAPI backend for intuitive research exploration
 - **Prefect Orchestration**: Adaptive rate limiting with circuit breaker pattern, weekly incremental updates, and monthly full rebuilds
 - **Production Infrastructure**: Docker Compose setup, work pools, and deployment configurations
 - **Enhanced Documentation**: Comprehensive orchestration guides and project structure documentation
@@ -91,12 +98,25 @@ biomedical-graphrag/
 ├── docs/                       # Documentation
 │   ├── ORCHESTRATION.md            # Full orchestration guide
 │   └── QUICKSTART_ORCHESTRATION.md # Quick start guide
+├── frontend/                   # Next.js web application
+│   ├── app/                    # Next.js 14 app directory
+│   │   ├── page.tsx            # Landing page with statistics
+│   │   └── query/page.tsx      # ChatGPT-style query interface
+│   ├── lib/                    # Frontend utilities
+│   │   ├── api.ts              # Type-safe API client
+│   │   └── utils.ts            # Helper functions
+│   ├── package.json            # Frontend dependencies
+│   └── README.md               # Frontend setup guide
 ├── scripts/                    # Utility scripts
 │   ├── deploy_flows.py            # Deploy Prefect flows
 │   ├── run_flow.py                # Test flow execution
 │   └── README.md
 ├── src/
 │   └── biomedical_graphrag/
+│       ├── api/                # FastAPI backend
+│       │   ├── main.py         # FastAPI application
+│       │   ├── models/         # Request/Response schemas
+│       │   └── routes/         # API endpoints
 │       ├── application/        # Application layer
 │       │   ├── cli/            # Command-line interfaces
 │       │   └── services/       # Business logic services
@@ -245,9 +265,14 @@ make delete-qdrant-collection
 
 Production-ready workflow orchestration with Prefect for automated data updates, rate limiting, and error handling.
 
+**Requirements:**
+- Prefect 3.x (server and client)
+- Docker and Docker Compose
+- PostgreSQL (automatically provisioned via Docker)
+
 #### Prefect Setup
 
-Start the Prefect server with Docker Compose:
+Start the Prefect server with Docker Compose (includes PostgreSQL database and worker):
 
 ```bash
 # Start Prefect server (UI at http://localhost:4200)
@@ -260,20 +285,14 @@ make prefect-server-logs
 make prefect-server-stop
 ```
 
-Create work pool and deploy flows:
+Deploy flows to Prefect server:
 
 ```bash
-# Create work pool (one-time setup)
-prefect work-pool create biomedical-pool --type process
-
-# Deploy flows to Prefect server
+# Deploy all flows from prefect.yaml
 make prefect-deploy
-
-# Start worker to execute flows
-make prefect-worker-start
 ```
 
-Access the Prefect UI at `http://localhost:4200` to monitor and trigger flows.
+Access the Prefect UI at `http://localhost:4200/deployments` to view and trigger flows.
 
 #### Deployment Commands
 
@@ -331,6 +350,72 @@ The orchestration system includes adaptive rate limiting with circuit breaker pa
 For detailed orchestration documentation, see:
 - [docs/ORCHESTRATION.md](docs/ORCHESTRATION.md) - Comprehensive guide
 - [docs/QUICKSTART_ORCHESTRATION.md](docs/QUICKSTART_ORCHESTRATION.md) - Quick start
+
+### Web Interface
+
+Modern web application for intuitive biomedical research exploration. Built with FastAPI backend and Next.js frontend.
+
+**Features:**
+- ChatGPT-style conversational interface for natural language queries
+- Beautiful landing page with live database statistics
+- Real-time integration with Neo4j and Qdrant
+- Responsive design with Tailwind CSS
+- Type-safe API communication with TypeScript
+
+#### FastAPI Backend
+
+The FastAPI backend provides a production-ready REST API for querying the biomedical knowledge graph.
+
+**Start the API server:**
+
+```bash
+# Development mode with hot reload (recommended)
+make api-start
+
+# Production mode with multiple workers
+make api-start-prod
+```
+
+The API will be available at `http://localhost:8000` with interactive documentation at `http://localhost:8000/docs`.
+
+**API Endpoints:**
+- `POST /api/query/` - Natural language queries with hybrid search
+- `POST /api/search/` - Vector similarity search
+- `POST /api/graph/explore` - Graph traversal and exploration
+- `GET /api/health/` - System health monitoring
+- `GET /api/stats/` - Database statistics
+
+#### Next.js Frontend
+
+The Next.js frontend provides a modern, user-friendly interface for researchers.
+
+**Setup and run:**
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000`.
+
+**Configuration:**
+
+Create a `.env.local` file in the `frontend/` directory:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+**Pages:**
+- `/` - Landing page with statistics and example queries
+- `/query` - ChatGPT-style conversational query interface
+
+For detailed frontend documentation, see [frontend/README.md](frontend/README.md).
 
 ### Query Commands
 

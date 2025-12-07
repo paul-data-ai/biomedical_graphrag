@@ -169,7 +169,7 @@ prefect-server-logs: ## View Prefect server logs
 
 prefect-deploy: ## Deploy Prefect flows
 	@echo "Deploying Prefect flows..."
-	uv run python scripts/deploy_flows.py
+	uv run prefect deploy --all
 	@echo "Deployment complete."
 
 prefect-worker-start: ## Start Prefect worker locally (without Docker)
@@ -178,11 +178,11 @@ prefect-worker-start: ## Start Prefect worker locally (without Docker)
 
 prefect-run-incremental: ## Manually trigger incremental update
 	@echo "Triggering incremental update..."
-	uv run prefect deployment run biomedical-graphrag-incremental-update/adhoc-incremental-update
+	uv run prefect deployment run biomedical-graphrag-incremental-update/weekly-incremental
 
 prefect-run-rebuild: ## Manually trigger full rebuild
 	@echo "Triggering full rebuild..."
-	uv run prefect deployment run biomedical-graphrag-full-rebuild/adhoc-full-rebuild
+	uv run prefect deployment run biomedical-graphrag-full-rebuild/monthly-rebuild
 
 prefect-test-rate-limit: ## Test rate limiting with small dataset
 	@echo "Testing rate limiting..."
