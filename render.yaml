@@ -1,0 +1,44 @@
+services:
+  # FastAPI Backend
+  - type: web
+    name: biomedical-graphrag-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -e ."
+    startCommand: "uvicorn biomedical_graphrag.api.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: NEO4J__URI
+        sync: false
+      - key: NEO4J__USERNAME
+        sync: false
+      - key: NEO4J__PASSWORD
+        sync: false
+      - key: NEO4J__DATABASE
+        value: neo4j
+      - key: QDRANT__URL
+        sync: false
+      - key: QDRANT__API_KEY
+        sync: false
+      - key: QDRANT__COLLECTION_NAME
+        value: biomedical_papers
+      - key: QDRANT__EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: QDRANT__EMBEDDING_DIMENSION
+        value: 1536
+      - key: OPENAI__API_KEY
+        sync: false
+      - key: OPENAI__MODEL
+        value: llama-3.1-70b-versatile  # Groq model
+      - key: OPENAI__BASE_URL
+        value: https://api.groq.com/openai/v1  # Groq endpoint
+      - key: OPENAI__TEMPERATURE
+        value: 0.0
+      - key: OPENAI__MAX_TOKENS
+        value: 1500
+      - key: PREFECT_API_URL
+        sync: false
+      - key: PREFECT_API_KEY
+        sync: false

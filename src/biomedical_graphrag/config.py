@@ -11,6 +11,10 @@ logger = setup_logging()
 
 class OpenAISettings(BaseModel):
     api_key: SecretStr = Field(default=SecretStr(""), description="API key for OpenAI")
+    base_url: str | None = Field(
+        default=None,
+        description="Base URL for OpenAI-compatible API (e.g., Groq, OpenRouter). Leave empty for OpenAI."
+    )
     model: str = Field(default="gpt-4o-mini", description="OpenAI model to use for queries")
     temperature: float = Field(
         default=0.0, description="LLM temperature for OpenAI queries (0 for consistency)"
