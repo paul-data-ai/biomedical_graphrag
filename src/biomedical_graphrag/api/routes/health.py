@@ -4,8 +4,10 @@ import time
 from datetime import datetime
 from fastapi import APIRouter
 from loguru import logger
+from openai import AsyncOpenAI
 
 from biomedical_graphrag.api.models import SystemHealth
+from biomedical_graphrag.config import settings
 from biomedical_graphrag.infrastructure.neo4j_db.neo4j_client import AsyncNeo4jClient
 from biomedical_graphrag.infrastructure.qdrant_db.qdrant_vectorstore import AsyncQdrantVectorStore
 
@@ -76,3 +78,34 @@ async def get_health_status() -> SystemHealth:
         last_update=datetime.now(),
         uptime_seconds=uptime_seconds
     )
+
+
+@router.get("/openai-test")
+async def test_openai_connection():
+    """Test OpenAI API connectivity and return detailed diagnostics."""
+    result = {
+        "api_key_present": bool(settings.openai.api_key.get_secret_value()),
+        "api_key_length": len(settings.openai.api_key.get_secret_value()) if settings.openai.api_key.get_secret_value() else 0,
+        "api_key_prefix": settings.openai.api_key.get_secret_value()[:15] if settings.openai.api_key.get_secret_value() else "",
+        "base_url": settings.openai.base_url,
+        "model": settings.qdrant.embedding_model,
+        "test_result": None,
+        "error": None,
+        "error_type": None,
+    }
+
+    try:
+        client = AsyncOpenAI(api_key=settings.openai.api_key.get_secret_value())
+        response = await client.embeddings.create(
+            model=settings.qdrant.embedding_model,
+            input="test"
+        )
+        result["test_result"] = "SUCCESS"
+        result["embedding_dimension"] = len(response.data[0].embedding)
+    except Exception as e:
+        result["test_result"] = "FAILED"
+        result["error"] = str(e)
+        result["error_type"] = type(e).__name__
+        logger.error(f"OpenAI test failed: {type(e).__name__}: {e}")
+
+    return result
