@@ -19,6 +19,13 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.0-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
+<!-- Deployment Status -->
+
+[![API Status](https://img.shields.io/badge/API-Live-success?logo=render)](https://biomedical-graphrag-api.onrender.com)
+[![Uptime Status](https://img.shields.io/uptimerobot/status/m798163756-7c1b0e3a3c1e5d6f8a4b9c2d?label=Uptime)](https://stats.uptimerobot.com/UR74DMbMBT)
+
+**📊 [View Live Uptime Dashboard](https://stats.uptimerobot.com/UR74DMbMBT)**
+
 </div>
 
 ## Table of Contents
@@ -26,6 +33,7 @@
 - [Biomedical GraphRAG](#biomedical-graphrag)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+  - [Live Deployment](#live-deployment)
   - [Attribution](#attribution)
   - [Project Structure](#project-structure)
   - [Prerequisites](#prerequisites)
@@ -66,6 +74,23 @@ A comprehensive GraphRAG (Graph Retrieval-Augmented Generation) system designed 
 - **Biomedical Schema**: Specialized graph schema for papers, authors, institutions, genes, and MeSH terms
 - **Async Processing**: High-performance async data collection and processing
 - **Production Orchestration**: Prefect-based workflow orchestration with adaptive rate limiting and automated updates
+
+## Live Deployment
+
+This project is deployed and running on free-tier cloud services:
+
+- **API Backend**: [https://biomedical-graphrag-api.onrender.com](https://biomedical-graphrag-api.onrender.com) (Render)
+- **Uptime Monitoring**: [View Dashboard](https://stats.uptimerobot.com/UR74DMbMBT) (UptimeRobot - 5min checks)
+- **Graph Database**: Neo4j Aura (Free Tier - 50k nodes, 175k relationships)
+- **Vector Database**: Qdrant Cloud (Free Tier - 1GB storage)
+- **Orchestration**: Prefect Cloud (Free Tier - 20k task runs/month)
+- **AI Model**: Groq (Free - 14,400 requests/day)
+
+**Total Monthly Cost**: $0 🎉
+
+> **Note**: The Render free tier spins down after 15 minutes of inactivity. UptimeRobot keeps the API warm with automated health checks every 5 minutes. First request after sleep takes ~30 seconds.
+
+For deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Attribution
 
