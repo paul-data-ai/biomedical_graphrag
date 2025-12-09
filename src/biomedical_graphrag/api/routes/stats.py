@@ -29,15 +29,15 @@ async def get_database_stats() -> StatsResponse:
 
         # Query for counts
         cypher_query = """
-        MATCH (p:PAPER)
+        MATCH (p:Paper)
         WITH count(p) as paper_count
-        MATCH (g:GENE)
+        MATCH (g:Gene)
         WITH paper_count, count(g) as gene_count
-        MATCH (a:AUTHOR)
+        MATCH (a:Author)
         WITH paper_count, gene_count, count(a) as author_count
-        MATCH (i:INSTITUTION)
+        MATCH (i:Institution)
         WITH paper_count, gene_count, author_count, count(i) as institution_count
-        MATCH (m:MESHTERM)
+        MATCH (m:MeshTerm)
         RETURN
             paper_count,
             gene_count,
