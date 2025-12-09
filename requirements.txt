@@ -6,7 +6,11 @@ pydantic-settings>=2.0.0
 
 # Database clients
 neo4j>=5.0.0
+neo4j-graphrag>=1.0.0
 qdrant-client>=1.7.0
+
+# Data sources
+biopython>=1.80
 
 # OpenAI SDK (works with Groq, OpenRouter, etc.)
 openai>=1.0.0
