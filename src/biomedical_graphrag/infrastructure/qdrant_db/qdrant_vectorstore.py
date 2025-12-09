@@ -94,7 +94,9 @@ class AsyncQdrantVectorStore:
             )
             return embedding.data[0].embedding
         except Exception as e:
-            logger.error(f"❌ Failed to create embedding: {e}")
+            logger.error(f"❌ Failed to create embedding: {type(e).__name__}: {e}")
+            logger.error(f"   Model: {settings.qdrant.embedding_model}")
+            logger.error(f"   API Key configured: {bool(settings.openai.api_key.get_secret_value())}")
             raise
 
     async def upsert_points(
