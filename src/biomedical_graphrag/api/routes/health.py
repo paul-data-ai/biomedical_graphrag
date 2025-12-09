@@ -8,7 +8,6 @@ from loguru import logger
 from biomedical_graphrag.api.models import SystemHealth
 from biomedical_graphrag.infrastructure.neo4j_db.neo4j_client import AsyncNeo4jClient
 from biomedical_graphrag.infrastructure.qdrant_db.qdrant_vectorstore import AsyncQdrantVectorStore
-from biomedical_graphrag.config import Settings
 
 router = APIRouter(prefix="/api/health", tags=["health"])
 
@@ -32,16 +31,16 @@ async def get_health_status() -> SystemHealth:
 
     # Check Neo4j
     try:
-        settings = Settings()
-        neo4j_client = AsyncNeo4jClient(settings=settings)
-        await neo4j_client.query("RETURN 1")
+        neo4j_client = await AsyncNeo4jClient.create()
+        await neo4j_client.execute("RETURN 1")
+        await neo4j_client.close()
         neo4j_connected = True
     except Exception as e:
         logger.warning(f"Neo4j health check failed: {e}")
 
     # Check Qdrant
     try:
-        vectorstore = QdrantVectorStore(settings=settings)
+        vectorstore = AsyncQdrantVectorStore()
         # Try to get collection info
         qdrant_connected = await vectorstore.check_connection()
     except Exception as e:

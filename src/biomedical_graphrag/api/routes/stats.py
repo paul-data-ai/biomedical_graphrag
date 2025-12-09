@@ -6,7 +6,6 @@ from loguru import logger
 
 from biomedical_graphrag.api.models import StatsResponse
 from biomedical_graphrag.infrastructure.neo4j_db.neo4j_client import AsyncNeo4jClient
-from biomedical_graphrag.config import Settings
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
@@ -26,8 +25,7 @@ async def get_database_stats() -> StatsResponse:
         HTTPException: If stats retrieval fails
     """
     try:
-        settings = Settings()
-        client = AsyncNeo4jClient(settings=settings)
+        client = await AsyncNeo4jClient.create()
 
         # Query for counts
         cypher_query = """
@@ -49,6 +47,7 @@ async def get_database_stats() -> StatsResponse:
         """
 
         results = await client.query(cypher_query)
+        await client.close()
 
         if results:
             stats = results[0]
