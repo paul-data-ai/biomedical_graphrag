@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { Send, Loader2, Home, FileText, Dna } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PaperResult } from '@/lib/api';
 
-export default function QueryPage() {
+function QueryPageContent() {
   const searchParams = useSearchParams();
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: any }>>([]);
@@ -349,5 +349,20 @@ function ExampleButton({ text, onClick }: { text: string; onClick: () => void })
     >
       <p className="text-gray-700">{text}</p>
     </button>
+  );
+}
+
+export default function QueryPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading query interface...</p>
+        </div>
+      </div>
+    }>
+      <QueryPageContent />
+    </Suspense>
   );
 }
