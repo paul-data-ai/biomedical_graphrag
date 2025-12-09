@@ -22,7 +22,10 @@ class AsyncQdrantQuery:
         self.collection_name = settings.qdrant.collection_name
         self.embedding_dimension = settings.qdrant.embedding_dimension
 
-        self.openai_client = AsyncOpenAI(api_key=settings.openai.api_key.get_secret_value())
+        self.openai_client = AsyncOpenAI(
+            api_key=settings.openai.api_key.get_secret_value(),
+            base_url=settings.openai.base_url
+        )
 
         self.qdrant_client = AsyncQdrantVectorStore()
 

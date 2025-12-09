@@ -17,7 +17,10 @@ from biomedical_graphrag.utils.logger_util import setup_logging
 logger = setup_logging()
 
 
-openai_client = OpenAI(api_key=settings.openai.api_key.get_secret_value())
+openai_client = OpenAI(
+    api_key=settings.openai.api_key.get_secret_value(),
+    base_url=settings.openai.base_url
+)
 
 
 def get_neo4j_schema() -> str:
