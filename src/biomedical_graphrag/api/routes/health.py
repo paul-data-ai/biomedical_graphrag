@@ -16,11 +16,13 @@ _start_time = time.time()
 
 
 @router.get("/", response_model=SystemHealth)
+@router.head("/")
 async def get_health_status() -> SystemHealth:
     """
     Get comprehensive system health status.
 
     Checks connectivity to Neo4j, Qdrant, and Prefect services.
+    Supports both GET and HEAD requests for monitoring tools.
 
     Returns:
         SystemHealth with status of all components
