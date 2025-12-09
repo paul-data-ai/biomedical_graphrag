@@ -37,6 +37,21 @@ class AsyncQdrantVectorStore:
         """Close the async Qdrant client."""
         await self.client.close()
 
+    async def check_connection(self) -> bool:
+        """
+        Check if the Qdrant client can connect successfully.
+
+        Returns:
+            bool: True if connection is successful, False otherwise
+        """
+        try:
+            # Try to get collection info or list collections
+            await self.client.get_collections()
+            return True
+        except Exception as e:
+            logger.warning(f"Qdrant connection check failed: {e}")
+            return False
+
     async def create_collection(self) -> None:
         """
         Create a new collection in Qdrant (async).
