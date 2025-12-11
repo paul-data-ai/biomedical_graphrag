@@ -33,6 +33,10 @@
 - [Biomedical GraphRAG](#biomedical-graphrag)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+  - [Architecture](#architecture)
+    - [System Architecture Overview](#system-architecture-overview)
+    - [Query Flow Details](#query-flow-details)
+    - [Technology Stack](#technology-stack)
   - [Live Deployment](#live-deployment)
   - [Attribution](#attribution)
   - [Project Structure](#project-structure)
@@ -74,6 +78,113 @@ A comprehensive GraphRAG (Graph Retrieval-Augmented Generation) system designed 
 - **Biomedical Schema**: Specialized graph schema for papers, authors, institutions, genes, and MeSH terms
 - **Async Processing**: High-performance async data collection and processing
 - **Production Orchestration**: Prefect-based workflow orchestration with adaptive rate limiting and automated updates
+
+## Architecture
+
+### System Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        PM[PubMed API<br/>Papers & Metadata]
+        GD[NCBI Gene API<br/>Gene Information]
+    end
+
+    subgraph "Data Collection Layer"
+        DC[Data Collectors<br/>Async Python]
+        PM --> DC
+        GD --> DC
+    end
+
+    subgraph "Storage Layer"
+        N4[Neo4j Graph DB<br/>Knowledge Graph]
+        QD[Qdrant Vector DB<br/>Embeddings]
+        DC --> N4
+        DC --> QD
+    end
+
+    subgraph "Orchestration Layer"
+        PF[Prefect Workflows<br/>Rate Limiting & Scheduling]
+        PF -.->|Manages| DC
+    end
+
+    subgraph "Query Processing"
+        USER[User Query]
+        FE[Next.js Frontend<br/>ChatGPT-style UI]
+        API[FastAPI Backend<br/>REST API]
+
+        USER --> FE
+        FE --> API
+
+        subgraph "Hybrid GraphRAG Engine"
+            VS[Vector Search<br/>Qdrant Query]
+            GE[Graph Enrichment<br/>Neo4j Cypher]
+            TOOL[LLM Tool Selection<br/>OpenAI/Groq]
+            FUSION[Answer Fusion<br/>LLM Synthesis]
+
+            API --> VS
+            VS --> QD
+            QD --> TOOL
+            TOOL --> GE
+            GE --> N4
+            N4 --> FUSION
+            QD -.->|Semantic Context| FUSION
+        end
+
+        FUSION --> API
+        API --> FE
+        FE --> USER
+    end
+
+    subgraph "AI Models"
+        EMB[OpenAI Embeddings<br/>text-embedding-3-small]
+        LLM[LLM Provider<br/>GPT-4o-mini / Groq]
+
+        DC -.->|Generate| EMB
+        EMB -.->|Store| QD
+        TOOL -.->|Uses| LLM
+        FUSION -.->|Uses| LLM
+    end
+
+    style N4 fill:#008CC1,stroke:#006491,color:#fff
+    style QD fill:#5A31F4,stroke:#4020C4,color:#fff
+    style PF fill:#024DFD,stroke:#0239C9,color:#fff
+    style LLM fill:#412991,stroke:#2A1A5E,color:#fff
+    style EMB fill:#412991,stroke:#2A1A5E,color:#fff
+    style FUSION fill:#10b981,stroke:#059669,color:#fff
+```
+
+### Query Flow Details
+
+**Step 1: Vector Search (Qdrant)**
+- User question → Embedding generation
+- Semantic similarity search across papers
+- Returns top-k most relevant documents
+
+**Step 2: Graph Enrichment (Neo4j)**
+- LLM analyzes question + Qdrant results
+- Automatically selects relevant Neo4j tools:
+  - Author collaboration networks
+  - Gene co-occurrence analysis
+  - MeSH term relationships
+  - Citation networks
+
+**Step 3: Answer Fusion**
+- Combines vector search results + graph data
+- LLM synthesizes comprehensive answer
+- Returns answer with supporting papers
+
+### Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Frontend** | Next.js 14, TailwindCSS, TypeScript | User interface with real-time streaming |
+| **Backend** | FastAPI, Python 3.13, Async/Await | REST API with high performance |
+| **Graph Database** | Neo4j 5.28 | Knowledge graph (papers, authors, genes) |
+| **Vector Database** | Qdrant 1.15 | Semantic search with embeddings |
+| **AI Models** | OpenAI GPT-4o-mini, Groq, Embeddings | LLM reasoning & vector generation |
+| **Orchestration** | Prefect 3.2, PostgreSQL | Workflow automation & scheduling |
+| **Data Sources** | PubMed E-utilities, NCBI Gene API | Biomedical literature & gene data |
 
 ## Live Deployment
 
