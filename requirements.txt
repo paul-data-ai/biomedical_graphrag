@@ -4,6 +4,11 @@ uvicorn[standard]>=0.32.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 
+# LangChain
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.2.0
+
 # Database clients
 neo4j>=5.0.0
 neo4j-graphrag>=1.0.0
