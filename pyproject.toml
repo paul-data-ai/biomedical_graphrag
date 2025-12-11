@@ -12,6 +12,8 @@ requires-python = ">=3.12"
 dependencies = [
     "biopython>=1.85",
     "fastapi>=0.115.0",
+    "langchain>=0.3.0",
+    "langchain-openai>=0.2.0",
     "loguru>=0.7.3",
     "neo4j>=5.28.2",
     "neo4j-graphrag>=1.10.0",

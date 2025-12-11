@@ -12,6 +12,11 @@ from .responses import (
     PaperResult,
     AuthorResult,
     GeneResult,
+    ChatMessage,
+    SessionInfo,
+    SessionListResponse,
+    SessionDetailResponse,
+    SessionActionResponse,
 )
 
 __all__ = [
@@ -28,4 +33,9 @@ __all__ = [
     "PaperResult",
     "AuthorResult",
     "GeneResult",
+    "ChatMessage",
+    "SessionInfo",
+    "SessionListResponse",
+    "SessionDetailResponse",
+    "SessionActionResponse",
 ]

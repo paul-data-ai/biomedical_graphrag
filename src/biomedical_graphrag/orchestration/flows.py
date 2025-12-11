@@ -1,7 +1,14 @@
 """Main Prefect flows for biomedical GraphRAG orchestration."""
 
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any
+
+# Add src directory to path for Prefect Cloud deployments
+src_dir = Path(__file__).parent.parent.parent
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 from prefect import flow, get_run_logger
 from prefect.artifacts import create_markdown_artifact

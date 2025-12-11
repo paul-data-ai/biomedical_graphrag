@@ -12,6 +12,7 @@ from biomedical_graphrag.api.routes import (
     graph_router,
     health_router,
     stats_router,
+    sessions_router,
 )
 
 
@@ -65,6 +66,7 @@ app.include_router(search_router)
 app.include_router(graph_router)
 app.include_router(health_router)
 app.include_router(stats_router)
+app.include_router(sessions_router)
 
 
 @app.get("/", include_in_schema=False)
@@ -91,6 +93,7 @@ async def api_info():
             "graph": "/api/graph/explore - Graph exploration",
             "health": "/api/health - System health status",
             "stats": "/api/stats - Database statistics",
+            "sessions": "/api/sessions - Conversation session management",
         },
         "docs": {
             "swagger": "/docs",

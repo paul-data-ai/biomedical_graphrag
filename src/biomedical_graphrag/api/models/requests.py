@@ -7,13 +7,17 @@ class QueryRequest(BaseModel):
     """Request model for natural language queries."""
 
     question: str = Field(..., description="Natural language question", min_length=1, max_length=500)
+    session_id: str | None = Field(
+        default=None,
+        description="Optional session ID for conversation continuity. If not provided, a new session is created.",
+    )
     mode: str = Field(
         default="hybrid",
         description="Query mode: 'hybrid' (graph + vector), 'graph' (only graph), or 'vector' (only vector)",
     )
     limit: int = Field(default=10, description="Maximum number of results", ge=1, le=100)
 
-    model_config = {"json_schema_extra": {"examples": [{"question": "What are the latest findings on CRISPR?", "mode": "hybrid", "limit": 10}]}}
+    model_config = {"json_schema_extra": {"examples": [{"question": "What are the latest findings on CRISPR?", "session_id": "abc-123", "mode": "hybrid", "limit": 10}]}}
 
 
 class SearchRequest(BaseModel):

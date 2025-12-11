@@ -41,6 +41,7 @@ class QueryResponse(BaseModel):
 
     question: str
     answer: str
+    session_id: str
     papers: list[PaperResult] = Field(default_factory=list)
     authors: list[AuthorResult] = Field(default_factory=list)
     genes: list[GeneResult] = Field(default_factory=list)
@@ -52,6 +53,7 @@ class QueryResponse(BaseModel):
         {
             "question": "What are the latest findings on CRISPR?",
             "answer": "Recent research shows...",
+            "session_id": "abc-123",
             "papers": [],
             "authors": [],
             "genes": [],
@@ -119,3 +121,44 @@ class StatsResponse(BaseModel):
     total_institutions: int
     total_mesh_terms: int
     last_updated: datetime | None = None
+
+
+class ChatMessage(BaseModel):
+    """Chat message model."""
+
+    role: str = Field(description="Message role: 'user' or 'assistant'")
+    content: str = Field(description="Message content")
+
+
+class SessionInfo(BaseModel):
+    """Chat session information."""
+
+    session_id: str
+    created_at: str
+    last_accessed: str
+    message_count: int
+    first_message: str
+    last_message: str
+
+
+class SessionListResponse(BaseModel):
+    """Response for listing all sessions."""
+
+    sessions: list[SessionInfo]
+    total_count: int
+
+
+class SessionDetailResponse(BaseModel):
+    """Response for getting session details."""
+
+    session_id: str
+    messages: list[ChatMessage]
+    metadata: dict[str, Any]
+
+
+class SessionActionResponse(BaseModel):
+    """Response for session actions (create, clear, delete)."""
+
+    success: bool
+    message: str
+    session_id: str | None = None
