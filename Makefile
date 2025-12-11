@@ -152,7 +152,37 @@ all-check: ruff-format ruff-check clean ## Run all: linting, formatting and type
 all-fix: ruff-format-fix ruff-check-fix mypy clean ## Run all fix: auto-formatting and linting fixes
 
 ################################################################################
-## Prefect Orchestration
+## Prefect Orchestration - LOCAL (Recommended for Development/Tutorial)
+################################################################################
+
+prefect-local-start: ## Start local Prefect server (no Docker required)
+	@echo "Starting local Prefect server..."
+	@echo "UI will be available at http://localhost:4200"
+	uv run prefect server start
+
+prefect-local-deploy: ## Deploy flows to local Prefect server
+	@echo "Deploying flows to local Prefect server..."
+	uv run python scripts/deploy_local.py
+
+prefect-local-worker: ## Start local Prefect worker (run in separate terminal)
+	@echo "Starting local Prefect worker..."
+	@echo "Make sure Prefect server is running first!"
+	uv run prefect worker start --pool default
+
+prefect-local-trigger-incremental: ## Manually trigger incremental update (local)
+	@echo "Triggering incremental update..."
+	uv run prefect deployment run incremental_update/weekly-incremental
+
+prefect-local-trigger-rebuild: ## Manually trigger full rebuild (local)
+	@echo "Triggering full rebuild..."
+	uv run prefect deployment run full_rebuild/full-rebuild
+
+prefect-local-trigger-validation: ## Manually trigger consistency check (local)
+	@echo "Triggering consistency validation..."
+	uv run prefect deployment run consistency_check/daily-validation
+
+################################################################################
+## Prefect Orchestration - DOCKER (For Production)
 ################################################################################
 
 prefect-server-start: ## Start Prefect server with Docker Compose
